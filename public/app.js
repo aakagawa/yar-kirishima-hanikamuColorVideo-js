@@ -100,8 +100,43 @@ let targetData = null;
 let currentData = null;
 const interpolationSpeed = 0.01;
 
+// Load and create texture from an image
+const image = new Image();
+image.src = './assets/hanikamu_02.png'; // Path to your preloaded image
+image.onload = () => {
+  const canvasTmp = document.createElement('canvas');
+  const ctxTmp = canvasTmp.getContext('2d');
+
+  const width = 1800;
+  const height = 1200;
+  canvasTmp.width = width;
+  canvasTmp.height = height;
+  ctxTmp.drawImage(image, 0, 0, width, height);
+
+  const imageData = ctxTmp.getImageData(0, 0, width, height);
+
+  // Create and bind texture
+  imageTexture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, imageTexture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, imageData.data);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+  console.log('Image texture loaded');
+
+  // Load and parse CSV file
+  fetch('./assets/data/02/2024817_123544_fudoudaki_water_16min_cooked.csv')
+    .then(response => response.text())
+    .then(csvText => {
+      const chunks = parseCSV(csvText);
+      startDataInterpolation(chunks, imageData); // Start interpolation process
+    });
+};
+
 // Function to start interpolation and iterate over CSV data
-function startDataInterpolation(chunks, imageData, width, height) {
+function startDataInterpolation(chunks, imageData) {
   let currentIndex = 0;
 
   // Set the first chunk as the initial target data
@@ -111,24 +146,6 @@ function startDataInterpolation(chunks, imageData, width, height) {
   let lastFrameTime = performance.now();
   let frameCount = 0;
   let fps = 0;
-  
-  // let interpolationCounter = 0;
-  // const interpolationSteps = 8; // Interpolate over 
-
-  // function continuousInterpolation() {
-  //   if (interpolationCounter === 0) {
-  //     if (currentData && targetData) {
-  //       const interpolatedData = currentData.map((value, index) => {
-  //         return value + (targetData[index] - value) * interpolationSpeed;
-  //       });
-    
-  //       // Update the image with interpolated data
-  //       updateImage(interpolatedData, imageData, width, height);
-    
-  //       // Update currentData towards targetData
-  //       currentData = interpolatedData.slice();
-  //     }
-  //   }
 
   // Continuous interpolation
   function continuousInterpolation() {
@@ -138,13 +155,13 @@ function startDataInterpolation(chunks, imageData, width, height) {
       });
 
       // Update the image with interpolated data
-      updateImage(interpolatedData, imageData, width, height);
+      updateImage(interpolatedData, imageData);
 
       // Update currentData towards targetData
       currentData = interpolatedData.slice();
     }
 
-      // FPS calculation
+    // FPS calculation
     const now = performance.now();
     frameCount++;
     if (now - lastFrameTime >= 1000) { // Every second
@@ -168,55 +185,6 @@ function startDataInterpolation(chunks, imageData, width, height) {
     targetData = resampleData(chunks[currentIndex], 5100); // Resample new target data
   }, 5000);
 }
-
-// Load and create texture from an image
-const image = new Image();
-image.src = './assets/hanikamu_03.png'; // Path to your preloaded image
-image.onload = () => {
-  const canvasTmp = document.createElement('canvas');
-  const ctxTmp = canvasTmp.getContext('2d');
-
-  const width = 2400;
-  const height = 1600;
-  canvasTmp.width = width;
-  canvasTmp.height = height;
-  ctxTmp.drawImage(image, 0, 0, width, height);
-
-  const imageData = ctxTmp.getImageData(0, 0, width, height);
-
-  // Create and bind texture
-  imageTexture = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, imageTexture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, imageData.data);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
-  console.log('Image texture loaded');
-
-  // Set the WebGL viewport to match the canvas size
-  resizeCanvas(width, height);
-
-  // Load and parse CSV file
-  fetch('./assets/data/02/2024817_123544_fudoudaki_water_16min_cooked.csv')
-    .then(response => response.text())
-    .then(csvText => {
-      const chunks = parseCSV(csvText);
-      startDataInterpolation(chunks, imageData, width, height); // Start interpolation process
-    });
-};
-
-// Adjust the canvas size to fill the entire screen
-function resizeCanvas(canvasWidth, canvasHeight) {
-  canvas.width = canvasWidth;
-  canvas.height = canvasHeight;
-  gl.viewport(0, 0, canvasWidth, canvasHeight);
-  drawScene();
-}
-
-// Listen for window resize events
-window.addEventListener('resize', resizeCanvas);
 
 // Function to parse CSV text into chunks of data
 function parseCSV(csvText) {
@@ -246,10 +214,12 @@ function resampleData(data, targetLength) {
 }
 
 // Function to update the image based on data
-function updateImage(data, imageData, width, height) {
+function updateImage(data, imageData) {
+  const width = 1800;
+  const height = 1200;
   const rowsPerSample = height / data.length;
 
-  const maxValue = 50000;
+  const maxValue = 100000;
   // Normalize the intensity values to range [0, 1]
   // const maxValue = Math.max(...data);
   // const minValue = Math.min(...data);
@@ -258,12 +228,12 @@ function updateImage(data, imageData, width, height) {
   const stretchedImageData = new Uint8Array(width * height * 4);
 
   for (let y = 0; y < data.length; y++) {
-    // const value = normalizedData[y];
-    const value = data[y] / maxValue; // Absolute value 
-    const startRow = Math.floor((data.length - 1 - y) * rowsPerSample); // Flip the row index
-    const endRow = Math.floor((data.length - y) * rowsPerSample);
+    const flippedY = data.length - 1 - y; // Invert the y-axis
+    const value = data[flippedY] / maxValue;
+    const startRow = Math.floor(y * rowsPerSample);
+    const endRow = Math.floor((y + 1) * rowsPerSample);
     const rowWidth = Math.floor(width * value);
-
+  
     for (let row = startRow; row < endRow; row++) {
       for (let x = 0; x < rowWidth; x++) {
         const srcIndex = (row * width + Math.floor(x / value)) * 4;
@@ -276,6 +246,10 @@ function updateImage(data, imageData, width, height) {
     }
   }
 
+  if (!imageTexture) {
+    imageTexture = gl.createTexture();
+  }
+
   gl.bindTexture(gl.TEXTURE_2D, imageTexture);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, stretchedImageData);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -285,9 +259,6 @@ function updateImage(data, imageData, width, height) {
 
   drawScene();
 }
-
-// Initial draw
-drawScene();
 
 // Function to draw the scene
 function drawScene() {
@@ -303,3 +274,6 @@ function drawScene() {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 }
+
+// Initial draw
+drawScene();
