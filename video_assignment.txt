@@ -1,0 +1,24 @@
+Composite bw monitor (hospital)
+data 1: maruo2
+image: hanikamu_01.png 
+
+data 2: funki
+image: hanikamu_01.png 
+
+
+Analogue bw monitor (tv)
+data: shinsui
+image: hanikamu_02.png 
+
+
+Analogue color monitor (tv)
+data 1: onami choujou land
+image: hanikamu_02.png
+
+data 2: onami choujou water
+image: hanikamu_02.png
+
+
+Composite color monitor (car)
+data: fudoudaki_
+image: hanikamu_03.png 

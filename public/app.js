@@ -102,13 +102,13 @@ const interpolationSpeed = 0.01;
 
 // Load and create texture from an image
 const image = new Image();
-image.src = './assets/hanikamu_02.png'; // Path to your preloaded image
+image.src = './assets/hanikamu_01.png'; // Path to your preloaded image
 image.onload = () => {
   const canvasTmp = document.createElement('canvas');
   const ctxTmp = canvasTmp.getContext('2d');
 
-  const width = 1800;
-  const height = 1200;
+  const width = 1440;
+  const height = 960;
   canvasTmp.width = width;
   canvasTmp.height = height;
   ctxTmp.drawImage(image, 0, 0, width, height);
@@ -127,7 +127,7 @@ image.onload = () => {
   console.log('Image texture loaded');
 
   // Load and parse CSV file
-  fetch('./assets/data/02/2024817_123544_fudoudaki_water_16min_cooked.csv')
+  fetch('./assets/data/02/2024817_155526_maruo2_15min_cooked.csv')
     .then(response => response.text())
     .then(csvText => {
       const chunks = parseCSV(csvText);
@@ -182,7 +182,7 @@ function startDataInterpolation(chunks, imageData) {
   setInterval(() => {
     console.log(currentIndex);
     currentIndex = (currentIndex + 1) % chunks.length; // Loop through chunks
-    targetData = resampleData(chunks[currentIndex], 5100); // Resample new target data
+    targetData = resampleData(chunks[currentIndex], 2040); // Resample new target data
   }, 5000);
 }
 
@@ -215,11 +215,11 @@ function resampleData(data, targetLength) {
 
 // Function to update the image based on data
 function updateImage(data, imageData) {
-  const width = 1800;
-  const height = 1200;
+  const width = 1440;
+  const height = 960;
   const rowsPerSample = height / data.length;
 
-  const maxValue = 100000;
+  const maxValue = 5000;
   // Normalize the intensity values to range [0, 1]
   // const maxValue = Math.max(...data);
   // const minValue = Math.min(...data);
